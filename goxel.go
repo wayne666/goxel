@@ -6,23 +6,41 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
+	//"reflect"
 )
 
-type headRange struct {
+type headerRange struct {
 	start int
 	end   int
 	url   string
 	fh    *os.File
 }
 
+type respOpts struct {
+	start  int
+	end    int
+	status int
+}
+
+type goxeler struct {
+	// numbers of blocks
+	N int
+	// request header opts
+	header *headerRange
+	// result
+	result int
+}
+
 var (
+	n      = flag.Int("n", 8, "") // block count
 	header = flag.String("H", "", "")
 	ua     = flag.String("U", "", "")
 	o      = flag.String("o", "", "")
 
-	bc = flag.Int("bc", 8, "")
+	//bc = flag.Int("bc", 8, "")
 	//bs = flag.Int("bs", 2, "")
 
 	verbose = 0
@@ -31,7 +49,7 @@ var (
 var usage = ` Usage: goxel [options...] <url>
 
 Options:
-	-bn Numbers of blocks to run.
+	-n  Numbers of blocks to run.
 	-H  Add header string.
 	-U  Set user agent.
 	-v  More status information.
@@ -39,24 +57,43 @@ Options:
 `
 
 func main() {
-	var url string
-	url = "http://112.253.22.162/9/m/y/d/z/mydziciabmgopabgscdoihgvrnzdvd/he.yinyuetai.com/F2A5015080D4156E413EE6227BB0E8C2.flv?sc=e01f47f6135c5339&br=3101&vid=2398390&aid=38959&area=KR&vst=0&ptp=mv&rd=yinyuetai.com"
+	flag.Usage = func() {
+		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
+	}
+	flag.Parse()
 
-	bc := *bc
+	n := *n
+	output := *o
+
+	if n <= 0 {
+		usageAndExit("n cannot be smaller than 1.")
+	}
+
+	if output == "" {
+		usageAndExit("o must be assgined the output file.")
+	}
+
+	if flag.NArg() < 1 {
+		usageAndExit("")
+	}
 
 	var (
-		blockSize, fileSizeInt, blockCount int
+		//blockSize, fileSize, blockCount int
+		blockSize, fileSize, blockCount int
+		url                             string
 	)
 
-	blockSize = bc * 1024 * 1024
+	url = flag.Args()[0]
+	blockSize = n * 1024 * 1024
 
-	fileSizeInt = fileSizeCal(url)
-	blockCount = blockCountCal(blockSize, fileSizeInt)
+	fileSize = fileSizeCal(url)
+	blockCount = blockCountCal(blockSize, fileSize)
 
-	// create dest file handle
-	fh, err := os.Create("./goxel_download.flv")
+	fmt.Println(fileSize)
+	fmt.Println(blockCount)
+
+	fh, err := os.Create(output)
 	checkerr(err)
-
 	defer fh.Close()
 
 	// add wg wait group
@@ -64,7 +101,7 @@ func main() {
 
 	wg.Add(blockCount)
 
-	jobs := make(chan *headRange, blockCount)
+	jobs := make(chan *headerRange, blockCount)
 	//jobs := make(chan string, segCount)
 	result := make(chan int, blockCount)
 
@@ -81,10 +118,10 @@ func main() {
 		println(end)
 
 		if i == (blockSize - 1) {
-			end = fileSizeInt
+			end = fileSize
 		}
 		//fmt.Println(start, end)
-		headRangeRef := &headRange{
+		headRangeRef := &headerRange{
 			start: start,
 			end:   end,
 			fh:    fh,
@@ -106,6 +143,10 @@ func main() {
 	wg.Wait()
 }
 
+func analyUrl(url string) string {
+	return url
+}
+
 func fileSizeCal(url string) int {
 	resp, err := http.Head(url)
 	checkerr(err)
@@ -121,8 +162,85 @@ func fileSizeCal(url string) int {
 	return fileSizeInt
 }
 
-func blockCountCal(blockSize int, fileSize int) int {
+func usageAndExit(message string) {
+	if message != "" {
+		fmt.Fprintf(os.Stderr, message)
+		fmt.Fprintf(os.Stderr, "\n\n")
+	}
+	flag.Usage()
+	fmt.Fprintf(os.Stderr, "\n")
+	os.Exit(1)
+}
 
+//func main() {
+//	var url string
+//	url = "http://112.253.22.162/9/m/y/d/z/mydziciabmgopabgscdoihgvrnzdvd/he.yinyuetai.com/F2A5015080D4156E413EE6227BB0E8C2.flv?sc=e01f47f6135c5339&br=3101&vid=2398390&aid=38959&area=KR&vst=0&ptp=mv&rd=yinyuetai.com"
+//
+//	bc := *bc
+//
+//
+//	blockSize = n * 1024 * 1024
+//
+//	fileSizeInt = fileSizeCal(url)
+//	blockCount = blockCountCal(blockSize, fileSizeInt)
+//
+//	// create dest file handle
+//	fh, err := os.Create("./goxel_download.flv")
+//	checkerr(err)
+//
+//	defer fh.Close()
+//
+//	// add wg wait group
+//	var wg sync.WaitGroup
+//
+//	wg.Add(blockCount)
+//
+//	jobs := make(chan *headRange, blockCount)
+//	//jobs := make(chan string, segCount)
+//	result := make(chan int, blockCount)
+//
+//	for i := 0; i < blockCount; i++ {
+//		go func() {
+//			segChanDownload(&wg, jobs, result)
+//		}()
+//	}
+//
+//	for i := 0; i < blockCount; i++ {
+//
+//		start := i * blockSize
+//		end := start + blockSize - 1
+//		println(end)
+//
+//		if i == (blockSize - 1) {
+//			end = fileSizeInt
+//		}
+//		//fmt.Println(start, end)
+//		headRangeRef := &headRange{
+//			start: start,
+//			end:   end,
+//			fh:    fh,
+//			url:   url,
+//		}
+//		jobs <- headRangeRef
+//	}
+//	close(jobs)
+//
+//	//for i := 0; i < segCount; i++ {
+//	//	println(<-result)
+//	//}
+//	go func() {
+//		for val := range result {
+//			println(val)
+//		}
+//	}()
+//
+//	wg.Wait()
+//}
+//
+
+func blockCountCal(blockSize, fileSize int) int {
+
+	var blockCount int
 	remainder := fileSize % blockSize
 	blockCount = fileSize / blockSize
 
@@ -133,15 +251,21 @@ func blockCountCal(blockSize int, fileSize int) int {
 	return blockCount
 }
 
-func segChanDownload(wg *sync.WaitGroup, ch chan *headRange, result chan int) {
-	//func segChanDownload(wg *sync.WaitGroup, ch chan string, result chan int) {
+//
+func segChanDownload(wg *sync.WaitGroup, ch chan *headerRange, result chan int) {
 
+	defer wg.Done()
+	var (
+		start int
+		end   int
+		url   string
+		f     *os.File
+	)
 	for val := range ch {
-		defer wg.Done()
-		url := val.url
-		start := val.start
-		end := val.end
-		f := val.fh
+		url = val.url
+		start = val.start
+		end = val.end
+		f = val.fh
 
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", url, nil)
@@ -194,13 +318,13 @@ func segChanDownload(wg *sync.WaitGroup, ch chan *headRange, result chan int) {
 	//defer resp.Body.Close()
 	////ioutil.WriteFile("/tmp/test.flv", body, 0644)
 
-	//fmt.Println("[start] ", start)
-	//f.Seek(int64(start), 0)
-	//checkerr(err)
-	//f.Write([]byte(body))
+	////fmt.Println("[start] ", start)
+	////f.Seek(int64(start), 0)
+	////checkerr(err)
+	////f.Write([]byte(body))
 
-	//defer f.Close()
-	//checkerr(err)
+	////defer f.Close()
+	////checkerr(err)
 	return
 }
 
