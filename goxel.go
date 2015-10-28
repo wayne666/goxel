@@ -1,9 +1,9 @@
 package main
 
 import (
-	"./goxeler"
 	"flag"
 	"fmt"
+	"github.com/WayneZhouChina/goxel/goxeler"
 	"net/http"
 	"os"
 	"runtime"
