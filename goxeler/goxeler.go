@@ -1,23 +1,40 @@
 package goxeler
 
 import (
+	//	"fmt"
 	"os"
 )
 
-type headerRange struct {
+type HeaderRange struct {
 	start int
 	end   int
-	//	url   string
-	fh *os.File
+	//url   string
+	//fh    *os.File
 }
 
 type Goxeler struct {
 	// numbers of blocks
 	N int
-	// request header opts
-	header *headerRange
+
+	//request header opts
+	Header *HeaderRange
+
 	// result
-	result int
+	Result int
 	// request url
-	url string
+	Url string
+	// download file size
+	FileSize int
+	// block count
+	BlockCount int
+	// each block size
+	BlockSize int
+	//write file handler
+	FH *os.File
+}
+
+type Result struct {
+	Start      int
+	End        int
+	statusCode int
 }
