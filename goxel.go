@@ -10,30 +10,6 @@ import (
 	"strconv"
 )
 
-type HeaderRange struct {
-	start int
-	end   int
-	url   string
-	fh    *os.File
-}
-
-type RespOpts struct {
-	start  int
-	end    int
-	status int
-}
-
-type Goxeler struct {
-	// numbers of blocks
-	N int
-	// result
-	result int
-	// download file size
-	fileSize int
-	// block count
-	blockCount int
-}
-
 var (
 	// block count
 	n      = flag.Int("n", 8, "")
