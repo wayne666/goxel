@@ -47,8 +47,6 @@ func (g *Goxeler) run() {
 		headRangeRef := &HeaderRange{
 			start: start,
 			end:   end,
-			//fh:    fh,
-			//url: url,
 		}
 		headers <- headRangeRef
 	}
