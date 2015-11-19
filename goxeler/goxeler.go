@@ -2,14 +2,19 @@ package goxeler
 
 import (
 	//	"fmt"
+	"github.com/cheggaaa/pb"
 	"os"
 )
 
 type HeaderRange struct {
 	start int
 	end   int
-	//url   string
-	//fh    *os.File
+}
+
+type result struct {
+	start      int
+	end        int
+	statusCode int
 }
 
 type Goxeler struct {
@@ -31,10 +36,14 @@ type Goxeler struct {
 	BlockSize int
 	//write file handler
 	FH *os.File
+	// result struct recieve results
+	Results chan *result
+	// progress bar
+	bar *pb.ProgressBar
 }
 
-type Result struct {
-	Start      int
-	End        int
-	statusCode int
+func newPb(size int) (bar *pb.ProgressBar) {
+	bar = pb.New(size)
+	bar.Start()
+	return
 }

@@ -1,16 +1,19 @@
 package goxeler
 
 import (
+	//"github.com/cheggaaa/pb"
 	"io/ioutil"
 	"net/http"
-	//"os"
-	"fmt"
 	"strconv"
 	"sync"
+	//	"time"
 )
 
 func (g *Goxeler) Run() {
+	g.Results = make(chan *result, g.BlockCount)
+	//g.bar = newPb(g.BlockCount)
 	g.run()
+	//close(g.Results)
 }
 
 func (g *Goxeler) run() {
@@ -24,11 +27,10 @@ func (g *Goxeler) run() {
 	BlockCount = g.BlockCount
 
 	headers := make(chan *HeaderRange, BlockCount)
-	results := make(chan int, BlockCount)
 
 	for i := 0; i < BlockCount; i++ {
 		go func() {
-			g.blockDownload(&wg, headers, results)
+			g.blockDownload(&wg, headers)
 		}()
 	}
 
@@ -36,35 +38,45 @@ func (g *Goxeler) run() {
 	FileSize = g.FileSize
 
 	for i := 0; i < BlockCount; i++ {
-
 		start := i * BlockSize
 		end := start + BlockSize - 1
 
-		if i == (BlockSize - 1) {
+		if i == (BlockCount - 1) {
 			end = FileSize
+			println("=============")
+			println(end)
+			println("=============")
 		}
-		fmt.Println(start, end)
-		headRangeRef := &HeaderRange{
+
+		headers <- &HeaderRange{
 			start: start,
 			end:   end,
-			//fh:    fh,
-			//url: url,
 		}
-		headers <- headRangeRef
 	}
 	close(headers)
 
 	go func() {
-		for result := range results {
-			println(result)
+		for result := range g.Results {
+			//println("==================")
+			println(result.start)
 		}
 	}()
+	//for {
+	//	aresult := <-g.Results
+	//	println(aresult.start)
+	//	//if result.statusCode == 206 {
+	//	//	g.bar.Increment()
+	//	//}
+	//	//	}
+	//}
+	//}()
 
 	wg.Wait()
 }
 
-func (g *Goxeler) blockDownload(wg *sync.WaitGroup, headers chan *HeaderRange, results chan int) {
+func (g *Goxeler) blockDownload(wg *sync.WaitGroup, headers chan *HeaderRange) {
 
+	fh := g.FH
 	for h := range headers {
 		defer wg.Done()
 		client := &http.Client{}
@@ -72,21 +84,29 @@ func (g *Goxeler) blockDownload(wg *sync.WaitGroup, headers chan *HeaderRange, r
 
 		startStr := strconv.Itoa(h.start)
 		endStr := strconv.Itoa(h.end)
-		headerVal := "bytes=" + startStr + "-" + endStr
-		//fmt.Println(headerVal)
-		req.Header.Set("Range", headerVal)
+		headerStr := "bytes=" + startStr + "-" + endStr
+		println(headerStr)
+		req.Header.Set("Range", headerStr)
 
 		resp, err := client.Do(req)
-		g.checkerr(err)
+
+		code := 0
+		if err == nil {
+			code = resp.StatusCode
+		}
+		println(code)
 
 		body, err := ioutil.ReadAll(resp.Body)
 		g.checkerr(err)
 
-		//fh := h.fh
-		fh := g.FH
 		fh.Seek(int64(h.start), 0)
 		fh.Write([]byte(body))
-		results <- 1
+
+		g.Results <- &result{
+			start:      h.start,
+			end:        h.end,
+			statusCode: code,
+		}
 	}
 }
 
