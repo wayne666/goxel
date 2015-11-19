@@ -20,10 +20,8 @@ type result struct {
 type Goxeler struct {
 	// numbers of blocks
 	N int
-
 	//request header opts
 	Header *HeaderRange
-
 	// result
 	Result int
 	// request url
