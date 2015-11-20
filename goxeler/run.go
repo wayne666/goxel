@@ -11,9 +11,10 @@ import (
 
 func (g *Goxeler) Run() {
 	g.Results = make(chan *result, g.BlockCount)
-	//g.bar = newPb(g.BlockCount)
+	g.bar = newPb(g.BlockCount)
 	g.run()
-	//close(g.Results)
+	g.bar.FinishPrint("The End!")
+	close(g.Results)
 }
 
 func (g *Goxeler) run() {
@@ -43,9 +44,6 @@ func (g *Goxeler) run() {
 
 		if i == (BlockCount - 1) {
 			end = FileSize
-			println("=============")
-			println(end)
-			println("=============")
 		}
 
 		headers <- &HeaderRange{
@@ -57,19 +55,11 @@ func (g *Goxeler) run() {
 
 	go func() {
 		for result := range g.Results {
-			//println("==================")
-			println(result.start)
+			if result.statusCode == 206 {
+				g.bar.Increment()
+			}
 		}
 	}()
-	//for {
-	//	aresult := <-g.Results
-	//	println(aresult.start)
-	//	//if result.statusCode == 206 {
-	//	//	g.bar.Increment()
-	//	//}
-	//	//	}
-	//}
-	//}()
 
 	wg.Wait()
 }
@@ -85,7 +75,6 @@ func (g *Goxeler) blockDownload(wg *sync.WaitGroup, headers chan *HeaderRange) {
 		startStr := strconv.Itoa(h.start)
 		endStr := strconv.Itoa(h.end)
 		headerStr := "bytes=" + startStr + "-" + endStr
-		println(headerStr)
 		req.Header.Set("Range", headerStr)
 
 		resp, err := client.Do(req)
@@ -94,7 +83,6 @@ func (g *Goxeler) blockDownload(wg *sync.WaitGroup, headers chan *HeaderRange) {
 		if err == nil {
 			code = resp.StatusCode
 		}
-		println(code)
 
 		body, err := ioutil.ReadAll(resp.Body)
 		g.checkerr(err)
