@@ -2,15 +2,15 @@
 
 -----------------
 
-# Description
+## Description
 
 	goxel like axel tool
 
-# Installation
+## Installation
 
 	$ go get github.com/WayneZhouChina/goxel
 
-# Usage
+## Usage
 
 	goxel [options...] <url>
 	
@@ -21,10 +21,10 @@
 		-v  More status information.
 		-o  Specify local output file.
 
-# AUTHOR
+## AUTHOR
 
 	Written by WayneZhou, cumtxhzyy[at]gmail.com
 
-# COPYRIGHT
+## COPYRIGHT
 
 	Copyright (c) 2015 WayneZhou. This library is free software; you can redistribute it and/or modify it.
