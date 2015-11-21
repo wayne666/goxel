@@ -20,3 +20,11 @@
 		-U  Set user agent.
 		-v  More status information.
 		-o  Specify local output file.
+
+# AUTHOR
+
+	Written by WayneZhou, cumtxhzyy[at]gmail.com
+
+# COPYRIGHT
+
+	Copyright (c) 2015 WayneZhou. This library is free software; you can redistribute it and/or modify it.
