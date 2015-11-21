@@ -4,7 +4,11 @@
 
 # Description
 
-	goxel  like axel tool
+	goxel like axel tool
+
+# Installation
+
+	$ go get github.com/WayneZhouChina/goxel
 
 # Usage
 
