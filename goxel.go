@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/WayneZhouChina/goxel/goxeler"
+	//"./goxeler"
 	"net/http"
 	"os"
 	"runtime"
