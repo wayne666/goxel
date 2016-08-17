@@ -57,10 +57,12 @@ func main() {
 	)
 
 	url = flag.Args()[0]
-	blockSize = n * 1024 * 1024
+	//blockSize = n * 1024 * 1024
 
-	fileSize = fileSizeCal(url)
-	blockCount = blockCountCal(blockSize, fileSize)
+	fileSize = getContentLength(url)
+	//blockCount = blockCountCal(blockSize, fileSize)
+	blockCount = n
+	blockSize = blockSizeCal(blockCount, blockSize)
 
 	fh, err := os.Create(output)
 	checkerr(err)
@@ -81,7 +83,7 @@ func analyUrl(url string) string {
 	return url
 }
 
-func fileSizeCal(url string) int {
+func getContentLength(url string) int {
 	resp, err := http.Head(url)
 	checkerr(err)
 
@@ -106,17 +108,10 @@ func usageAndExit(message string) {
 	os.Exit(1)
 }
 
-func blockCountCal(blockSize, fileSize int) int {
+func blockSizeCal(blockCount, fileSize int) int {
+	blockSize := (fileSize - fileSize%blockCount) / blockCount
 
-	var blockCount int
-	remainder := fileSize % blockSize
-	blockCount = fileSize / blockSize
-
-	if remainder != 0 {
-		blockCount += 1
-	}
-
-	return blockCount
+	return blockSize
 }
 
 func checkerr(e error) {
