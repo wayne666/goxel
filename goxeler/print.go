@@ -1,12 +1,5 @@
 package goxeler
 
-import "fmt"
-
-//#type result struct {
-//#	start      int
-//#	end        int
-//#	statusCode int
-//#}
 func (g *Goxeler) printBar() {
 
 	for {
