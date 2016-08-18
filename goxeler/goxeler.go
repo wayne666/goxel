@@ -6,10 +6,10 @@ import (
 	"os"
 )
 
-type HeaderRange struct {
-	start int
-	end   int
-}
+//type HeaderRange struct {
+//	start int
+//	end   int
+//}
 
 type result struct {
 	start      int
@@ -21,7 +21,7 @@ type Goxeler struct {
 	// numbers of blocks
 	N int
 	//request header opts
-	Header *HeaderRange
+	//Header *HeaderRange
 	// result
 	Result int
 	// request url

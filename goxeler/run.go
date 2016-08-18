@@ -13,88 +13,64 @@ func (g *Goxeler) Run() {
 	g.Results = make(chan *result, g.BlockCount)
 	g.bar = newPb(g.BlockCount)
 	g.run()
-	g.bar.FinishPrint("The End!")
+	g.printBar()
+	g.bar.FinishPrint("File has download!")
 	close(g.Results)
 }
 
 func (g *Goxeler) run() {
 	var wg sync.WaitGroup
+	blockNumChan := make(chan int, g.BlockCount)
+
 	wg.Add(g.BlockCount)
-
-	var (
-		BlockCount, BlockSize, FileSize int
-	)
-
-	BlockCount = g.BlockCount
-
-	headers := make(chan *HeaderRange, BlockCount)
-
-	for i := 0; i < BlockCount; i++ {
+	for i := 0; i < g.BlockCount; i++ {
+		blockNumChan <- i
 		go func() {
-			g.blockDownload(&wg, headers)
+			g.blockDownload(blockNumChan)
+			wg.Done()
 		}()
 	}
-
-	BlockSize = g.BlockSize
-	FileSize = g.FileSize
-
-	for i := 0; i < BlockCount; i++ {
-		start := i * BlockSize
-		end := start + BlockSize - 1
-
-		if i == (BlockCount - 1) {
-			end = FileSize
-		}
-
-		headers <- &HeaderRange{
-			start: start,
-			end:   end,
-		}
-	}
-	close(headers)
-
-	go func() {
-		for result := range g.Results {
-			if result.statusCode == 206 {
-				g.bar.Increment()
-			}
-		}
-	}()
-
 	wg.Wait()
 }
 
-func (g *Goxeler) blockDownload(wg *sync.WaitGroup, headers chan *HeaderRange) {
+func (g *Goxeler) blockDownload(blockNumChan chan int) {
+	blockNum := <-blockNumChan
 
-	fh := g.FH
-	for h := range headers {
-		defer wg.Done()
-		client := &http.Client{}
-		req, err := http.NewRequest("GET", g.Url, nil)
+	rangeStart := blockNum * g.BlockSize
+	rangeEnd := rangeStart + g.BlockSize - 1
+	if blockNum == (g.BlockCount - 1) {
+		rangeEnd = g.FileSize
+	}
+	g.makeRequest(rangeStart, rangeEnd)
+}
 
-		startStr := strconv.Itoa(h.start)
-		endStr := strconv.Itoa(h.end)
-		headerStr := "bytes=" + startStr + "-" + endStr
-		req.Header.Set("Range", headerStr)
+func (g *Goxeler) makeRequest(rangeStart, rangeEnd int) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", g.Url, nil)
 
-		resp, err := client.Do(req)
+	startStr := strconv.Itoa(rangeStart)
+	endStr := strconv.Itoa(rangeEnd)
+	headerStr := "bytes=" + startStr + "-" + endStr
+	req.Header.Set("Range", headerStr)
 
-		code := 0
-		if err == nil {
-			code = resp.StatusCode
-		}
+	resp, err := client.Do(req)
+	g.checkerr(err)
 
-		body, err := ioutil.ReadAll(resp.Body)
-		g.checkerr(err)
+	statusCode := 0
+	if err == nil {
+		statusCode = resp.StatusCode
+	}
 
-		fh.Seek(int64(h.start), 0)
-		fh.Write([]byte(body))
+	body, err := ioutil.ReadAll(resp.Body)
+	g.checkerr(err)
 
-		g.Results <- &result{
-			start:      h.start,
-			end:        h.end,
-			statusCode: code,
-		}
+	g.FH.Seek(int64(rangeStart), 0)
+	g.FH.Write([]byte(body))
+
+	g.Results <- &result{
+		start:      rangeStart,
+		end:        rangeEnd,
+		statusCode: statusCode,
 	}
 }
 

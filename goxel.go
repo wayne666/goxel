@@ -16,7 +16,7 @@ var (
 	n      = flag.Int("n", 8, "")
 	header = flag.String("H", "", "")
 	ua     = flag.String("U", "", "")
-	o      = flag.String("o", "", "")
+	O      = flag.String("O", "", "")
 
 	verbose = 0
 )
@@ -28,7 +28,7 @@ Options:
 	-H  Add header string.
 	-U  Set user agent.
 	-v  More status information.
-	-o  Specify local output file.
+	-O  Specify local output file.
 `
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 	flag.Parse()
 
 	n := *n
-	output := *o
+	output := *O
 
 	if n <= 0 {
 		usageAndExit("n cannot be smaller than 1.")
@@ -58,12 +58,10 @@ func main() {
 	)
 
 	url = flag.Args()[0]
-	//blockSize = n * 1024 * 1024
 
-	fileSize = getContentLength(url)
-	//blockCount = blockCountCal(blockSize, fileSize)
 	blockCount = n
-	blockSize = blockSizeCal(blockCount, blockSize)
+	fileSize = getContentLength(url)
+	blockSize = blockSizeCal(blockCount, fileSize)
 
 	fh, err := os.Create(output)
 	checkerr(err)
