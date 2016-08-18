@@ -38,6 +38,8 @@ type Goxeler struct {
 	Results chan *result
 	// progress bar
 	bar *pb.ProgressBar
+	//timeout
+	timeout chan bool
 }
 
 func newPb(size int) (bar *pb.ProgressBar) {

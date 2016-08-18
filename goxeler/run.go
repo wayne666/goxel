@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
-	//	"time"
+	//"time"
 )
 
 func (g *Goxeler) Run() {
 	g.Results = make(chan *result, g.BlockCount)
 	g.bar = newPb(g.BlockCount)
 	g.run()
-	g.printBar()
 	g.bar.FinishPrint("File has download!")
 	close(g.Results)
 }
@@ -61,8 +60,13 @@ func (g *Goxeler) makeRequest(rangeStart, rangeEnd int) {
 		statusCode = resp.StatusCode
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	g.checkerr(err)
+	body, bodyErr := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	if statusCode == 206 && bodyErr == nil && g.bar != nil {
+		g.bar.Increment()
+	}
+	g.checkerr(bodyErr)
 
 	g.FH.Seek(int64(rangeStart), 0)
 	g.FH.Write([]byte(body))

@@ -20,6 +20,8 @@
 		-U  Set user agent.
 		-v  More status information.
 		-O  Specify local output file.
+		-h  This information
+		-V  Version information
 
 ## AUTHOR
 
