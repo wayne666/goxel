@@ -19,7 +19,7 @@
 		-H  Add header string.
 		-U  Set user agent.
 		-v  More status information.
-		-o  Specify local output file.
+		-O  Specify local output file.
 
 ## AUTHOR
 
