@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 	//"time"
+	"fmt"
 )
 
 func (g *Goxeler) Run() {
@@ -29,6 +30,7 @@ func (g *Goxeler) run() {
 			wg.Done()
 		}()
 	}
+	//g.printBar()
 	wg.Wait()
 }
 
@@ -40,15 +42,16 @@ func (g *Goxeler) blockDownload(blockNumChan chan int) {
 	if blockNum == (g.BlockCount - 1) {
 		rangeEnd = g.FileSize
 	}
-	g.makeRequest(rangeStart, rangeEnd)
+	g.makeRequest(rangeStart, rangeEnd, blockNum)
 }
 
-func (g *Goxeler) makeRequest(rangeStart, rangeEnd int) {
+func (g *Goxeler) makeRequest(rangeStart, rangeEnd, blockNum int) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", g.Url, nil)
 
 	startStr := strconv.Itoa(rangeStart)
 	endStr := strconv.Itoa(rangeEnd)
+	fmt.Printf("start: %d, end: %d\n", rangeStart, rangeEnd)
 	headerStr := "bytes=" + startStr + "-" + endStr
 	req.Header.Set("Range", headerStr)
 
@@ -75,6 +78,7 @@ func (g *Goxeler) makeRequest(rangeStart, rangeEnd int) {
 		start:      rangeStart,
 		end:        rangeEnd,
 		statusCode: statusCode,
+		blockNum:   blockNum,
 	}
 }
 

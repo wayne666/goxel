@@ -15,6 +15,7 @@ type result struct {
 	start      int
 	end        int
 	statusCode int
+	blockNum   int
 }
 
 type Goxeler struct {

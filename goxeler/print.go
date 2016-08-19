@@ -1,18 +1,22 @@
 package goxeler
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
+//TODO print some donwload data
 func (g *Goxeler) printBar() {
 
 	for {
 		select {
 		case result := <-g.Results:
-			//if result.statusCode == 206 {
-			//	g.bar.Increment()
-			//}
-			fmt.Printf("I think should print something, statusCode: %d\n", result.statusCode)
-		default:
-			return
+			if result.blockNum == (g.BlockCount - 1) {
+				return
+			}
+		case <-time.After(time.Second * 1):
+			//TODO continue print progress bar
+			fmt.Println("....")
 		}
 	}
 
