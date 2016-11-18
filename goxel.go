@@ -16,7 +16,7 @@ var (
 	n      = flag.Int("n", 8, "")
 	header = flag.String("H", "", "")
 	ua     = flag.String("U", "", "")
-	O      = flag.String("O", "", "")
+	o      = flag.String("o", "", "")
 
 	verbose = 0
 )
@@ -28,7 +28,7 @@ Options:
 	-H  Add header string.
 	-U  Set user agent.
 	-v  More status information.
-	-O  Specify local output file.
+	-o  Specify local output file.
 `
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 	flag.Parse()
 
 	n := *n
-	output := *O
+	output := *o
 
 	if n <= 0 {
 		usageAndExit("n cannot be smaller than 1.")

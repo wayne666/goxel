@@ -4,6 +4,7 @@ import (
 	//	"fmt"
 	"github.com/cheggaaa/pb"
 	"os"
+	"sync"
 )
 
 //type HeaderRange struct {
@@ -12,6 +13,13 @@ import (
 //}
 
 type result struct {
+	start      int
+	end        int
+	statusCode int
+	blockNum   int
+}
+
+type failed struct {
 	start      int
 	end        int
 	statusCode int
@@ -37,10 +45,12 @@ type Goxeler struct {
 	FH *os.File
 	// result struct recieve results
 	Results chan *result
+	Fails   chan *failed
 	// progress bar
 	bar *pb.ProgressBar
 	//timeout
 	timeout chan bool
+	sync.Mutex
 }
 
 func newPb(size int) (bar *pb.ProgressBar) {
