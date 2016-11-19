@@ -13,6 +13,7 @@ import (
 //}
 
 type result struct {
+	sync.Mutex
 	start      int
 	end        int
 	statusCode int
@@ -50,7 +51,8 @@ type Goxeler struct {
 	bar *pb.ProgressBar
 	//timeout
 	timeout chan bool
-	sync.Mutex
+	//response block count
+	BlockResponseCount int
 }
 
 func newPb(size int) (bar *pb.ProgressBar) {

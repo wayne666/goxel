@@ -1,28 +1,25 @@
 package goxeler
 
 import (
-	//"github.com/cheggaaa/pb"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"sync"
-	//"time"
-	//"fmt"
 )
 
 func (g *Goxeler) Run() {
-	g.Results = make(chan *result, g.BlockCount) //收集结果result的channel
-	//g.Fails = make(chan *failed, g.BlockCount)
+	//收集结果result的channel
+	g.Results = make(chan *result, g.BlockCount)
 
-	g.bar = newPb(g.BlockCount) // new 一个 progress bar 显示进度
+	// new 一个 progress bar 显示进度
+	g.bar = newPb(g.BlockCount)
 	g.run()
-	g.bar.FinishPrint("File has download!")
 	close(g.Results)
 }
 
 func (g *Goxeler) run() {
-
-	go g.printBar() // print result
+	// print progress bar and result
+	go g.printBar()
 
 	var wg sync.WaitGroup
 	wg.Add(g.BlockCount)
@@ -35,9 +32,8 @@ func (g *Goxeler) run() {
 	wg.Wait()
 }
 
-//func (g *Goxeler) blockDownload(blockNumChan chan int) {
 func (g *Goxeler) blockDownload(blockNum int) {
-
+	//拼装 range 的开始和结束
 	rangeStart := blockNum * g.BlockSize
 	rangeEnd := rangeStart + g.BlockSize - 1
 	if blockNum == (g.BlockCount - 1) {
@@ -88,7 +84,6 @@ func (g *Goxeler) makeRequest(rangeStart, rangeEnd, blockNum int) {
 			blockNum:   blockNum,
 		}
 	}
-
 }
 
 func (g *Goxeler) checkerr(e error) {
