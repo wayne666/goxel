@@ -15,10 +15,10 @@ func (g *Goxeler) Run() {
 	g.bar = newPb(g.BlockCount)
 	g.run()
 	close(g.Results)
+	g.FH.Close()
 }
 
 func (g *Goxeler) run() {
-	// print progress bar and result
 	go g.printBar()
 
 	var wg sync.WaitGroup
