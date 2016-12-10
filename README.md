@@ -15,13 +15,12 @@
 	goxel [options...] <url>
 	
 	Options:
-		-n  Numbers of blocks to run.
+		-n  Numbers of blocks to run[must].
 		-H  Add header string.
-		-U  Set user agent.
 		-v  More status information.
-		-O  Specify local output file.
-		-h  This information
-		-V  Version information
+		-o  Specify local output file[must].
+		-h  Help information.
+		-V  Version information.
 
 ## AUTHOR
 
