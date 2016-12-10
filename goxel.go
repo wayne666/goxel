@@ -29,9 +29,11 @@ func (h *headerSlice) Set(value string) error {
 
 var (
 	headerslice headerSlice
+	version     = "0.1.0"
 	n           = flag.Int("n", 8, "")
 	o           = flag.String("o", "", "")
-	verbose     = 0
+	verbose     = flag.Bool("v", false, "")
+	V           = flag.Bool("V", false, "version")
 )
 
 var usage = ` Usage: goxel [options...] <url>
@@ -54,6 +56,18 @@ func main() {
 
 	n := *n
 	output := *o
+	verbose := *verbose
+	V := *V
+
+	if verbose {
+		usageAndExit("")
+		return
+	}
+
+	if V {
+		fmt.Println("goxel version ", version)
+		return
+	}
 
 	if n <= 0 {
 		usageAndExit("n cannot be smaller than 1.")
