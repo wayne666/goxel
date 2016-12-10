@@ -57,9 +57,10 @@ func (g *Goxeler) downloadFile(request *request) {
 
 	c := http.Client{}
 	resp, err := c.Do(req)
+
 	// If HTTP request failed, retry 3 times
 	if resp.StatusCode != 206 && err != nil && request.retry-1 > 0 {
-		fmt.Printf("Block %d download failed, [error] %v, retrying...\n", err)
+		fmt.Printf("Block %d download failed, [error] %v, retrying...\n", request.blockNum, err)
 		// send request to requests chan, to download again
 		g.requests <- request
 		return
@@ -83,6 +84,7 @@ func (g *Goxeler) downloadFile(request *request) {
 	return
 }
 
+// calculate range header start and end
 func (g *Goxeler) calRangeHeader(blockNum int) (rangeStart, rangeEnd int) {
 	rangeStart = blockNum * g.BlockSize
 	rangeEnd = rangeStart + g.BlockSize - 1
