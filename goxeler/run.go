@@ -9,14 +9,12 @@ import (
 
 func (g *Goxeler) Run() {
 	g.requests = make(chan *request, g.BlockCount)
-	//g.results = make(chan *result, g.BlockCount)
 	g.runWorkers()
-	//close(g.results)
-
 }
 
 func (g *Goxeler) runWorkers() {
-	go g.makeRequest() // wait request from g.requests chan
+	// wait request from g.requests chan
+	go g.makeRequest()
 
 	g.wg.Add(g.BlockCount)
 	for i := 0; i < g.BlockCount; i++ {
