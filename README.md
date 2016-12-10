@@ -21,6 +21,9 @@
 		-o  Specify local output file[must].
 		-h  Help information.
 		-V  Version information.
+
+#### Example:
+
 	goxel -n 10 -o outfile http://xxx.com
 
 ## AUTHOR
