@@ -34,6 +34,7 @@ var (
 	o           = flag.String("o", "", "")
 	verbose     = flag.Bool("v", false, "")
 	V           = flag.Bool("V", false, "version")
+	h           = flag.Bool("h", false, "help information")
 )
 
 var usage = ` Usage: goxel [options...] <url>
@@ -43,7 +44,9 @@ Options:
 	-H  Custom HTTP header. You can specify as many as the header you needd.
 		For example, -H "Accept: text/html" -H "Content-Type: application/xml" .
 	-o  Specify local output file.
+	-h  Help information.
 	-v  More status information.
+	-V  Version
 `
 
 func main() {
@@ -58,14 +61,18 @@ func main() {
 	output := *o
 	verbose := *verbose
 	V := *V
+	h := *h
 
 	if verbose {
 		usageAndExit("")
 		return
 	}
-
 	if V {
 		fmt.Println("goxel version ", version)
+		return
+	}
+	if h {
+		usageAndExit("")
 		return
 	}
 
