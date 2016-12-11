@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/WayneZhouChina/goxel/goxeler"
-	//"./goxeler"
 	"net/http"
 	"os"
 	"regexp"
@@ -111,7 +110,7 @@ func main() {
 
 	// Get download file size, and caculate block count
 	blockCount := n
-	filesize := getFileContentLength(url)
+	filesize := getContentLength(url)
 	blockSize := blockSizeCalculate(blockCount, filesize)
 
 	(&goxeler.Goxeler{
@@ -124,10 +123,6 @@ func main() {
 	}).Run()
 }
 
-func analyUrl(url string) string {
-	return url
-}
-
 func parseInputWithRegexp(input, regexpString string) ([]string, error) {
 	re := regexp.MustCompile(regexpString)
 	matches := re.FindStringSubmatch(input)
@@ -137,7 +132,7 @@ func parseInputWithRegexp(input, regexpString string) ([]string, error) {
 	return matches, nil
 }
 
-func getFileContentLength(url string) int {
+func getContentLength(url string) int {
 	req, err := http.Head(url)
 	checkerr(err)
 
