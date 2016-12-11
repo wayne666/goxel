@@ -1,6 +1,6 @@
 package goxeler
 
-import ( //	"fmt"
+import (
 	"github.com/cheggaaa/pb"
 	"net/http"
 	"os"
@@ -37,9 +37,8 @@ type Goxeler struct {
 	//open write filehandle
 	FH *os.File
 	//progress bar
-	bar      *pb.ProgressBar
-	requests chan *request
-	//	results      chan *result
+	bar          *pb.ProgressBar
+	requests     chan *request
 	successCount int
 }
 

@@ -4,11 +4,29 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	//	"time"
 )
 
 func (g *Goxeler) Run() {
 	g.requests = make(chan *request, g.BlockCount)
+	//g.results = make(chan *result, g.BlockCount)
+
+	stopChan := make(chan struct{})
+	go g.stopPrinter(stopChan)
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	go func() {
+		<-c
+		stopChan <- struct{}{}
+		//close(g.results)
+		os.Exit(1)
+	}()
+
 	g.runWorkers()
 }
 
@@ -86,6 +104,16 @@ func (g *Goxeler) downloadFile(request *request) {
 
 	g.wg.Done()
 	return
+}
+
+func (g *Goxeler) stopPrinter(stopChan chan struct{}) {
+	for {
+		select {
+		case <-stopChan:
+			return
+		default:
+		}
+	}
 }
 
 // calculate range header start and end
