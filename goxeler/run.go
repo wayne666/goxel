@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	//	"time"
 )
 
 func (g *Goxeler) Run() {
@@ -58,6 +57,7 @@ func (g *Goxeler) makeRequest() {
 			if !ok {
 				fmt.Printf("\n")
 				fmt.Println("########## All requests have been sent ##########")
+				fmt.Printf("\n")
 				g.bar = newPb(g.BlockCount)
 				return
 			}
@@ -96,7 +96,7 @@ func (g *Goxeler) downloadFile(request *request) {
 	g.FH.Seek(int64(request.rangeStartEnd.start), 0)
 	g.FH.Write([]byte(body))
 	g.bar.Increment()
-	fmt.Println("Connection ", request.blockNum+1, " has Download.")
+	fmt.Println("Request ", request.blockNum+1, " has Done.")
 	g.successCount++
 	if g.successCount == g.BlockCount {
 		g.bar.FinishPrint("File has download!")
