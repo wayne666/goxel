@@ -79,6 +79,10 @@ func (g *Goxeler) downloadFile(request *request) {
 	g.FH.Write([]byte(body))
 	g.bar.Increment()
 	fmt.Println("Connection ", request.blockNum+1, " has Download.")
+	g.successCount++
+	if g.successCount == g.BlockCount {
+		g.bar.FinishPrint("File has download!")
+	}
 
 	g.wg.Done()
 	return
