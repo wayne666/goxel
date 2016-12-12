@@ -128,6 +128,7 @@ func main() {
 	}).Run()
 }
 
+// This function copy from https://github.com/rakyll/hey, Thanks for rakyll
 func parseInputWithRegexp(input, regexpString string) ([]string, error) {
 	re := regexp.MustCompile(regexpString)
 	matches := re.FindStringSubmatch(input)
