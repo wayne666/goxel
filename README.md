@@ -15,12 +15,13 @@
 	goxel [options...] <url>
 	
 	Options:
-		-n  Numbers of blocks to run[must].
+		-n  Numbers of blocks to run(must).
 		-H  Add header string.
 		-v  More status information.
-		-o  Specify local output file[must].
+		-o  Specify local output file(must).
 		-h  Help information.
 		-V  Version information.
+		-cpus Number of used cpu cores(Default is current machine cores).
 
 #### Example:
 
