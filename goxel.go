@@ -34,6 +34,7 @@ var (
 	verbose     = flag.Bool("v", false, "")
 	V           = flag.Bool("V", false, "version")
 	h           = flag.Bool("h", false, "help information")
+	cpus        = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
 )
 
 var usage = ` Usage: goxel [options...] <url>
@@ -46,6 +47,7 @@ Options:
 	-h  Help information.
 	-v  More status information.
 	-V  Version
+	-cpus Number of used cpu cores(Default is current machine cores).
 `
 
 func main() {
@@ -61,6 +63,9 @@ func main() {
 	verbose := *verbose
 	V := *V
 	h := *h
+	cpus := *cpus
+
+	runtime.GOMAXPROCS(cpus)
 
 	if verbose {
 		usageAndExit("")
