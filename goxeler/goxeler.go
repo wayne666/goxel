@@ -19,12 +19,6 @@ type request struct {
 	rangeStartEnd rangeStartEnd
 }
 
-//type result struct {
-//	blockNum      int
-//	rangeStartEnd rangeStartEnd
-//	statusCode    int
-//}
-
 type Goxeler struct {
 	wg          sync.WaitGroup
 	HttpRequest *http.Request
