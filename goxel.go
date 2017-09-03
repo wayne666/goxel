@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/WayneZhouChina/goxel/goxeler"
+	"github.com/wayne666/goxel/goxeler"
 	"net/http"
 	"os"
 	"regexp"

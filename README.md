@@ -8,7 +8,7 @@
 
 ## Installation
 
-	$ go get github.com/WayneZhouChina/goxel
+	$ go get github.com/wayne666/goxel
 
 ## Usage
 
