@@ -4,63 +4,39 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"os/signal"
 	"strconv"
 )
 
 func (g *Goxeler) Run() {
 	g.requests = make(chan *request, g.BlockCount)
-
-	stopChan := make(chan struct{})
-	go g.stopPrinter(stopChan)
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-
-	go func() {
-		<-c
-		stopChan <- struct{}{}
-		os.Exit(1)
-	}()
+	g.stopChan = make(chan struct{}, g.BlockCount)
+	g.bar = newPb(g.BlockCount)
 
 	g.runWorkers()
 }
 
 func (g *Goxeler) runWorkers() {
-	// wait request from g.requests chan
-	go g.makeRequest()
-
 	g.wg.Add(g.BlockCount)
 	for i := 0; i < g.BlockCount; i++ {
-		rangeStart, rangeEnd := g.calRangeHeader(i)
-		// send request to requests chan
-		g.requests <- &request{
-			blockNum: i,
-			retry:    3,
-			rangeStartEnd: rangeStartEnd{
-				start: rangeStart,
-				end:   rangeEnd,
-			},
+		rangeSE := g.calRangeHeader(i)
+		req := &request{
+			blockNum:      i,
+			rangeStartEnd: rangeSE,
 		}
+		go func() {
+			g.makeRequest(req)
+			g.wg.Done()
+		}()
 	}
-	close(g.requests)
 	g.wg.Wait()
 }
 
-func (g *Goxeler) makeRequest() {
-	for {
-		select {
-		case request, ok := <-g.requests:
-			if !ok {
-				fmt.Printf("\n")
-				fmt.Println("########## All requests have been sent ##########")
-				fmt.Printf("\n")
-				g.bar = newPb(g.BlockCount)
-				return
-			}
-			go g.downloadFile(request)
-		}
+func (g *Goxeler) makeRequest(request *request) {
+	select {
+	case <-g.stopChan:
+		return
+	default:
+		g.downloadFile(request)
 	}
 }
 
@@ -74,11 +50,8 @@ func (g *Goxeler) downloadFile(request *request) {
 	c := http.Client{}
 	resp, err := c.Do(req)
 
-	// If HTTP request failed, retry 3 times
 	if resp.StatusCode != 206 && err != nil && request.retry-1 > 0 {
-		fmt.Printf("Block %d download failed, [error] %v, retrying...\n", request.blockNum, err)
-		// send request to requests chan, to download again
-		g.requests <- request
+		fmt.Printf("Block %d download failed, [error] %v \n", request.blockNum, err)
 		return
 	}
 
@@ -100,28 +73,26 @@ func (g *Goxeler) downloadFile(request *request) {
 		g.bar.FinishPrint("File has download!")
 	}
 
-	g.wg.Done()
 	return
-}
-
-func (g *Goxeler) stopPrinter(stopChan chan struct{}) {
-	for {
-		select {
-		case <-stopChan:
-			return
-		default:
-		}
-	}
 }
 
 // calculate range header start and end
-func (g *Goxeler) calRangeHeader(blockNum int) (rangeStart, rangeEnd int) {
-	rangeStart = blockNum * g.BlockSize
-	rangeEnd = rangeStart + g.BlockSize - 1
+func (g *Goxeler) calRangeHeader(blockNum int) *rangeStartEnd {
+	rangeStart := blockNum * g.BlockSize
+	rangeEnd := rangeStart + g.BlockSize - 1
 	if blockNum == (g.BlockCount - 1) {
 		rangeEnd = g.FileSize
 	}
-	return
+	return &rangeStartEnd{
+		start: rangeStart,
+		end:   rangeEnd,
+	}
+}
+
+func (g *Goxeler) Stop() {
+	for i := 0; i < g.BlockCount; i++ {
+		g.stopChan <- struct{}{}
+	}
 }
 
 // This function comes from https://github.com/rakyll/hey, Thanks for rakyll

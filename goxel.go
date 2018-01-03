@@ -3,16 +3,22 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/wayne666/goxel/goxeler"
 	"net/http"
+	gourl "net/url"
 	"os"
+	"os/signal"
 	"regexp"
 	"runtime"
 	"strconv"
+	"time"
+
+	"github.com/wayne666/goxel/goxeler"
 )
 
 const (
 	headerRegexp = `^([\w-]+):\s*(.+)`
+	fileRegexp   = `([^\]+)$`
+	version      = "0.1.0"
 )
 
 type headerSlice []string
@@ -28,13 +34,14 @@ func (h *headerSlice) Set(value string) error {
 
 var (
 	headerslice headerSlice
-	version     = "0.1.0"
 	n           = flag.Int("n", 8, "")
 	o           = flag.String("o", "", "")
 	verbose     = flag.Bool("v", false, "")
 	V           = flag.Bool("V", false, "version")
 	h           = flag.Bool("h", false, "help information")
 	cpus        = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
+	z           = flag.Duration("z", 0, "")
+	proxyAddr   = flag.String("x", "", "")
 )
 
 var usage = ` Usage: goxel [options...] <url>
@@ -47,6 +54,9 @@ Options:
 	-h  Help information.
 	-v  More status information.
 	-V  Version
+	-z  Duration of application send requests. When duration is reached,
+	    application stops and exits.
+		Example: -z 10s -z 3m
 	-cpus Number of used cpu cores(Default is current machine cores).
 `
 
@@ -64,6 +74,7 @@ func main() {
 	V := *V
 	h := *h
 	cpus := *cpus
+	dur := *z
 
 	runtime.GOMAXPROCS(cpus)
 
@@ -104,6 +115,15 @@ func main() {
 		header.Set(match[0], match[1])
 	}
 
+	var proxyURL *gourl.URL
+	if *proxyAddr != "" {
+		var err error
+		proxyURL, err = gourl.Parse(*proxyAddr)
+		if err != nil {
+			usageAndExit(err.Error())
+		}
+	}
+
 	// Init http request, and add custom header
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header = header
@@ -118,14 +138,34 @@ func main() {
 	filesize := getContentLength(url)
 	blockSize := blockSizeCalculate(blockCount, filesize)
 
-	(&goxeler.Goxeler{
+	g := &goxeler.Goxeler{
 		HttpRequest: req,
 		FileSize:    filesize,
 		BlockCount:  blockCount,
 		BlockSize:   blockSize,
 		Url:         url,
 		FH:          fh,
-	}).Run()
+		ProxyAddr:   proxyURL,
+	}
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		fmt.Println("recv interrupt signal")
+		g.Stop()
+	}()
+
+	if dur > 0 {
+		go func() {
+			time.Sleep(dur)
+			g.Stop()
+		}()
+	}
+
+	fmt.Println(dur)
+
+	g.Run()
 }
 
 // This function copy from https://github.com/rakyll/hey, Thanks for rakyll

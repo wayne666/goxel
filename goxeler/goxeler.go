@@ -1,11 +1,13 @@
 package goxeler
 
 import (
-	"github.com/cheggaaa/pb"
 	"net/http"
+	"net/url"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/cheggaaa/pb"
 )
 
 type rangeStartEnd struct {
@@ -16,7 +18,7 @@ type rangeStartEnd struct {
 type request struct {
 	blockNum      int
 	retry         int
-	rangeStartEnd rangeStartEnd
+	rangeStartEnd *rangeStartEnd
 }
 
 type Goxeler struct {
@@ -34,6 +36,8 @@ type Goxeler struct {
 	bar          *pb.ProgressBar
 	requests     chan *request
 	successCount int
+	stopChan     chan struct{}
+	ProxyAddr    *url.URL
 }
 
 func newPb(size int) (bar *pb.ProgressBar) {
