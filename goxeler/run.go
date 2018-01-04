@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptrace"
 	"strconv"
+	"time"
 )
 
 func (g *Goxeler) Run() {
@@ -44,14 +46,53 @@ func (g *Goxeler) downloadFile(request *request) {
 	rangeHeader :=
 		"bytes=" + strconv.Itoa(request.rangeStartEnd.start) + "-" + strconv.Itoa(request.rangeStartEnd.end)
 
+	//s := time.Now()
+	//var code int
+	var dnsStart, connStart, resStart, reqStart, delayStart time.Time
+	//var dnsDuration, connDuration, resDuration, reqDuration, delayDuration time.Duration
+	var dnsDuration, connDuration, reqDuration, delayDuration time.Duration
+
 	req := cloneRequest(g.HttpRequest)
 	req.Header.Set("Range", rangeHeader)
 
+	trace := &httptrace.ClientTrace{
+		DNSStart: func(info httptrace.DNSStartInfo) {
+			dnsStart = time.Now()
+		},
+		DNSDone: func(dnsInfo httptrace.DNSDoneInfo) {
+			dnsDuration = time.Now().Sub(dnsStart)
+		},
+		GetConn: func(h string) {
+			connStart = time.Now()
+		},
+		GotConn: func(connInfo httptrace.GotConnInfo) {
+			if !connInfo.Reused {
+				connDuration = time.Now().Sub(connStart)
+			}
+			reqStart = time.Now()
+		},
+		WroteRequest: func(w httptrace.WroteRequestInfo) {
+			reqDuration = time.Now().Sub(reqStart)
+			delayStart = time.Now()
+		},
+		GotFirstResponseByte: func() {
+			delayDuration = time.Now().Sub(delayStart)
+			resStart = time.Now()
+		},
+	}
+
 	c := http.Client{}
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 	resp, err := c.Do(req)
 
-	if resp.StatusCode != 206 && err != nil && request.retry-1 > 0 {
+	//resp, err := c.Do(req)
+	if err != nil {
 		fmt.Printf("Block %d download failed, [error] %v \n", request.blockNum, err)
+		return
+	}
+
+	if resp.StatusCode != 206 {
+		fmt.Printf("Block %d download status error, [error] %v \n", request.blockNum, err)
 		return
 	}
 
