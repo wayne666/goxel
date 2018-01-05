@@ -152,7 +152,6 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		<-c
-		fmt.Println("recv interrupt signal")
 		g.Stop()
 	}()
 
@@ -162,8 +161,6 @@ func main() {
 			g.Stop()
 		}()
 	}
-
-	fmt.Println(dur)
 
 	g.Run()
 }
