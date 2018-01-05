@@ -150,6 +150,8 @@ func main() {
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+
+	// TODO: fix signal interrupt can not stop application bug
 	go func() {
 		<-c
 		g.Stop()
