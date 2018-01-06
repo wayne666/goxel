@@ -33,11 +33,25 @@ type Goxeler struct {
 	//open write filehandle
 	FH *os.File
 	//progress bar
+	start        time.Time
 	bar          *pb.ProgressBar
 	requests     chan *request
 	successCount int
 	stopChan     chan struct{}
 	ProxyAddr    *url.URL
+	results      chan *result
+}
+
+type result struct {
+	err           error
+	statusCode    int
+	duration      time.Duration
+	connDuration  time.Duration // connection setup(DNS lookup + Dial up) duration
+	dnsDuration   time.Duration // dns lookup duration
+	reqDuration   time.Duration // request "write" duration
+	resDuration   time.Duration // response "read" duration
+	delayDuration time.Duration // delay between response and request
+	contentLength int64
 }
 
 func newPb(size int) (bar *pb.ProgressBar) {

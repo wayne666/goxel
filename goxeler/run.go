@@ -14,7 +14,15 @@ func (g *Goxeler) Run() {
 	g.stopChan = make(chan struct{}, g.BlockCount)
 	g.bar = newPb(g.BlockCount)
 
+	go report(g.results)
 	g.runWorkers()
+}
+
+func report(results chan *result) {
+	for r := range results {
+		fmt.Printf("%#v\n", r)
+	}
+	return
 }
 
 func (g *Goxeler) runWorkers() {
@@ -46,11 +54,11 @@ func (g *Goxeler) downloadFile(request *request) {
 	rangeHeader :=
 		"bytes=" + strconv.Itoa(request.rangeStartEnd.start) + "-" + strconv.Itoa(request.rangeStartEnd.end)
 
-	//s := time.Now()
-	//var code int
+	s := time.Now()
+	var size int64
+	var code int
 	var dnsStart, connStart, resStart, reqStart, delayStart time.Time
-	//var dnsDuration, connDuration, resDuration, reqDuration, delayDuration time.Duration
-	var dnsDuration, connDuration, reqDuration, delayDuration time.Duration
+	var dnsDuration, connDuration, resDuration, reqDuration, delayDuration time.Duration
 
 	req := cloneRequest(g.HttpRequest)
 	req.Header.Set("Range", rangeHeader)
@@ -85,13 +93,17 @@ func (g *Goxeler) downloadFile(request *request) {
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 	resp, err := c.Do(req)
 
-	//resp, err := c.Do(req)
 	if err != nil {
 		fmt.Printf("Block %d download failed, [error] %v \n", request.blockNum, err)
 		return
 	}
 
-	if resp.StatusCode != 206 {
+	t := time.Now()
+	resDuration = t.Sub(s)
+	size = resp.ContentLength
+	code = resp.StatusCode
+
+	if code != 206 {
 		fmt.Printf("Block %d download status error, [error] %v \n", request.blockNum, err)
 		return
 	}
@@ -102,6 +114,18 @@ func (g *Goxeler) downloadFile(request *request) {
 		fmt.Printf("Read HTTP Body failed [error] %v\n", bodyErr)
 		g.wg.Done()
 		return
+	}
+
+	g.results <- &result{
+		err:           bodyErr,
+		statusCode:    code,
+		duration:      resDuration,
+		connDuration:  connDuration,
+		dnsDuration:   dnsDuration,
+		reqDuration:   reqDuration,
+		resDuration:   resDuration,
+		delayDuration: delayDuration,
+		contentLength: size,
 	}
 
 	// seek start position, write body to file
