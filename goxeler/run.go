@@ -21,6 +21,7 @@ func (g *Goxeler) Run() {
 
 func report(results chan *result) {
 	for r := range results {
+		// TODO: statistics the results for output
 		fmt.Printf("%#v\n", r)
 	}
 	return
