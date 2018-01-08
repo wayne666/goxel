@@ -33,4 +33,4 @@
 
 ## COPYRIGHT
 
-	Copyright (c) 2015 WayneZhou. This library is free software; you can redistribute it and/or modify it.
+	Copyright (c) 2018 WayneZhou. This library is free software; you can redistribute it and/or modify it.
