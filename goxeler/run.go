@@ -11,6 +11,7 @@ import (
 
 func (g *Goxeler) Run() {
 	g.requests = make(chan *request, g.BlockCount)
+	g.results = make(chan *result, g.BlockCount)
 	g.stopChan = make(chan struct{}, g.BlockCount)
 	g.bar = newPb(g.BlockCount)
 
