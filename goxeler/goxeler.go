@@ -22,17 +22,13 @@ type request struct {
 }
 
 type Goxeler struct {
-	wg          sync.WaitGroup
-	HttpRequest *http.Request
-	Url         string
-	// download file size
-	FileSize int
-	// block count
-	BlockCount int
-	BlockSize  int
-	//open write filehandle
-	FH *os.File
-	//progress bar
+	wg           sync.WaitGroup
+	HttpRequest  *http.Request
+	Url          string
+	FileSize     int
+	BlockCount   int
+	BlockSize    int
+	FH           *os.File
 	start        time.Time
 	bar          *pb.ProgressBar
 	requests     chan *request
@@ -40,6 +36,7 @@ type Goxeler struct {
 	stopChan     chan struct{}
 	ProxyAddr    *url.URL
 	results      chan *result
+	report       *report
 }
 
 type result struct {

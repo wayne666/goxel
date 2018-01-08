@@ -13,18 +13,16 @@ func (g *Goxeler) Run() {
 	g.requests = make(chan *request, g.BlockCount)
 	g.stopChan = make(chan struct{}, g.BlockCount)
 	g.results = make(chan *result, g.BlockCount)
+	g.start = time.Now()
 	g.bar = newPb(g.BlockCount)
+	g.report = newReport(g.results)
 
-	go report(g.results)
+	go func() {
+		runReporter(g.report)
+	}()
+
 	g.runWorkers()
-}
-
-func report(results chan *result) {
-	for r := range results {
-		// TODO: statistics the results for output
-		fmt.Printf("%#v\n", r)
-	}
-	return
+	g.Finish()
 }
 
 func (g *Goxeler) runWorkers() {
@@ -137,7 +135,8 @@ func (g *Goxeler) downloadFile(request *request) {
 	fmt.Println("Request ", request.blockNum+1, " has Done.")
 	g.successCount++
 	if g.successCount == g.BlockCount {
-		g.bar.FinishPrint("File has download!")
+		//g.bar.FinishPrint("File has download!")
+		g.bar.Finish()
 	}
 
 	return
@@ -159,8 +158,14 @@ func (g *Goxeler) calRangeHeader(blockNum int) *rangeStartEnd {
 func (g *Goxeler) Stop() {
 	for i := 0; i < g.BlockCount; i++ {
 		close(g.stopChan)
-		//<- struct{}{}
 	}
+}
+
+func (g *Goxeler) Finish() {
+	close(g.results)
+	total := time.Now().Sub(g.start)
+	<-g.report.done
+	g.report.finalize(total)
 }
 
 // This function comes from https://github.com/rakyll/hey, Thanks for rakyll
