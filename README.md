@@ -21,6 +21,9 @@
 		-o  Specify local output file(must).
 		-h  Help information.
 		-V  Version information.
+		-z  Duration of application send requests. When duration is reached,
+	    	application stops and exits.
+			Example: -z 10s -z 3m
 		-cpus Number of used cpu cores(Default is current machine cores).
 
 #### Example:
