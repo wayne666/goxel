@@ -108,6 +108,7 @@ func (g *Goxeler) downloadFile(request *request) {
 		return
 	}
 
+	//  TODO: read bytes stream from response body
 	body, bodyErr := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	if bodyErr != nil {
