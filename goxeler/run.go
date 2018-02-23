@@ -134,7 +134,12 @@ func (g *Goxeler) downloadFile(request *request) {
 	g.FH.Write([]byte(body))
 	g.bar.Increment()
 	fmt.Println("Request ", request.blockNum+1, " has Done.")
+
+	// sunccessCount++ race condition, so add Lock
+	g.mux.Lock()
 	g.successCount++
+	defer g.mux.Unlock()
+
 	if g.successCount == g.BlockCount {
 		//g.bar.FinishPrint("File has download!")
 		g.bar.Finish()
