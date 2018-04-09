@@ -37,6 +37,7 @@ type Goxeler struct {
 	ProxyAddr    *url.URL
 	results      chan *result
 	report       *report
+	mux          sync.Mutex
 }
 
 type result struct {
